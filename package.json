@@ -1,16 +1,21 @@
 {
   "scripts": {
-    "dev": "tsx watch --clear-screen=false src/app.ts"
+    "dev": "tsx watch --clear-screen=false src/app.ts",
+    "migrate:up": "tsx ./scripts/deployMigrations.ts",
+    "migrate:make": "tsx ./scripts/generateMigration.ts"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.11.0",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
     "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.6",
     "@types/mysql": "^2.15.26",
     "eslint": "^9.9.0",
     "globals": "^15.9.0",
