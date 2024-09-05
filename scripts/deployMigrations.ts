@@ -2,16 +2,16 @@ import fs from 'fs'
 import { RowDataPacket } from 'mysql2'
 import { db } from '../src/utils/db'
 
-const getLatestMigrationName = async () => {
-  let latestMigration: string = ''
+const getPassedMigrations = async () => {
+  const passedMigrations: string[] = []
 
   try {
     const [rows] = await db.query<RowDataPacket[]>(
-      'SELECT latest FROM migration'
+      'SELECT migration_item FROM migrations ORDER BY migration_item'
     )
 
     if (rows.length) {
-      latestMigration = rows[0].latest
+      passedMigrations.push(...rows.map((row) => row.migration_item))
     }
   } catch (error: unknown) {
     if (
@@ -22,37 +22,29 @@ const getLatestMigrationName = async () => {
     ) {
       if (error.code === 'ER_NO_SUCH_TABLE') {
         await db.query(
-          'CREATE TABLE IF NOT EXISTS migration (latest TEXT NOT NULL)'
+          'CREATE TABLE IF NOT EXISTS migrations (migration_item VARCHAR(255) UNIQUE NOT NULL)'
         )
-
-        const [rows] = await db.query<RowDataPacket[]>(
-          'SELECT latest FROM migration'
-        )
-
-        if (rows.length) {
-          latestMigration = rows[0].latest
-        }
       }
     }
   }
 
-  return latestMigration
+  return passedMigrations
 }
 
 ;(async () => {
   const migrations = fs.readdirSync('./migrations')
-  const latestMigration = await getLatestMigrationName()
 
-  const newMigrations = latestMigration
-    ? migrations.filter((m) => m > latestMigration)
-    : migrations
+  const passedMigrations = await getPassedMigrations()
+
+  const passedMigrationsSet = new Set(passedMigrations)
+  const newMigrations = migrations.filter(
+    (item) => !passedMigrationsSet.has(item)
+  )
 
   if (!newMigrations.length) {
     console.log('New migrations not found')
     process.exit(0)
   }
-
-  let newLastMigrationName: string = ''
 
   for (const migration of newMigrations) {
     console.log('Run migration: ', migration)
@@ -71,16 +63,13 @@ const getLatestMigrationName = async () => {
         }
       }
 
+      await db.execute('INSERT INTO migrations SET migration_item = ?', [
+        migration,
+      ])
       console.log('Migration executed successfully!')
-      newLastMigrationName = migration
     } catch (error) {
       console.error('Error executing migrations:', error)
     }
-  }
-
-  if (newLastMigrationName) {
-    await db.execute('UPDATE migration SET latest = ?', [newLastMigrationName])
-    console.log('New latest migration name: ', newLastMigrationName)
   }
 
   process.exit(0)

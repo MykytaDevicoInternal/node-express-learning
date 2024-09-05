@@ -15,3 +15,11 @@ export class BadRequestError extends Error {
     super(message)
   }
 }
+
+export class NotFoundError extends Error {
+  statusCode = HTTPStatusCodes.NotFound
+
+  constructor(message: string = HTTPMessages.BadRequest) {
+    super(message)
+  }
+}

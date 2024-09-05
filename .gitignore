@@ -1,5 +1,4 @@
 # npm
-yarn.lock
 node_modules
 package-lock.json
 npm-shrinkwrap.json
@@ -16,5 +15,6 @@ benchmarks/graphs
 # Environment
 .env
 
+yarn.lock
 # ignore additional files using core.excludesFile
 # https://git-scm.com/docs/gitignore

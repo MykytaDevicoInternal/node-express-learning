@@ -11,5 +11,5 @@ export const errorHandlerMiddleware = (
   const statusCode = error.statusCode || 500
   const message = error.message || ErrorMessages.SomethingWentWrong
 
-  return res.status(statusCode).send({ statusCode, message })
+  return res.status(statusCode).send({ success: false, message })
 }
