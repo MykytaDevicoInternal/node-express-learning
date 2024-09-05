@@ -2,7 +2,11 @@ import bcrypt from 'bcrypt'
 import { LoginRequestType, SingUpRequestType } from '@/schemas/userSchema'
 import UserModel from '../../models/user'
 import UserTokensModel from '../../models/userTokens'
-import { NotFoundError, UnauthorizedError } from '@/utils/errors'
+import {
+  BadRequestError,
+  NotFoundError,
+  UnauthorizedError,
+} from '@/utils/errors'
 import TokenService from '../../services/TokenService'
 
 export class AuthService {
@@ -32,6 +36,12 @@ export class AuthService {
     const { email, firstName, lastName, password } = data
 
     const hashedPassword = await bcrypt.hash(password, 10)
+
+    const existingUser = await this.userModel.findOneByEmail(email)
+
+    if (existingUser) {
+      throw new BadRequestError('User with such email already exists ')
+    }
 
     await this.userModel.createUser({
       email,
