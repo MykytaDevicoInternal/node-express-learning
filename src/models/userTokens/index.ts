@@ -6,7 +6,7 @@ class UserTokens {
 
   async findOneByUserId(userId: string) {
     const [rows] = await db.execute<RowDataPacket[]>(
-      'SELECT id, user_id AS "userId", refresh_token AS "refreshToke" FROM user_tokens WHERE user_id = ?',
+      'SELECT id, user_id AS "userId", refresh_token AS "refreshToken" FROM user_tokens WHERE user_id = ?',
       [userId]
     )
 

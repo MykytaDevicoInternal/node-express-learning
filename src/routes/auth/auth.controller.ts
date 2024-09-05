@@ -37,7 +37,10 @@ router.post(
       res: Response
     ) => {
       await authService.signup(req.body)
-      res.sendSuccessResponse(HTTPStatusCodes.Created, 'User successfully sign up')
+      res.sendSuccessResponse(
+        HTTPStatusCodes.Created,
+        'User successfully sign up'
+      )
     }
   )
 )
@@ -53,7 +56,10 @@ router.post(
 
     res.cookie('accessToken', accessToken)
     res.cookie('refreshToken', refreshToken)
-    res.sendSuccessResponse(HTTPStatusCodes.Ok, 'Refresh token has been updated')
+    res.sendSuccessResponse(
+      HTTPStatusCodes.Ok,
+      'Refresh token has been updated'
+    )
   })
 )
 
