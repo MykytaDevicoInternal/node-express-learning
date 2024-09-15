@@ -23,3 +23,11 @@ export class NotFoundError extends Error {
     super(message)
   }
 }
+
+export class ForbiddenError extends Error {
+  statusCode = HTTPStatusCodes.Forbidden
+
+  constructor(message: string = HTTPMessages.BadRequest) {
+    super(message)
+  }
+}
