@@ -33,3 +33,8 @@ export const HTTPMessages = {
 export const ErrorMessages = {
   SomethingWentWrong: 'Something went wrong',
 }
+
+export const EntityStatuses = {
+  Active: 1,
+  Removed: 0,
+}

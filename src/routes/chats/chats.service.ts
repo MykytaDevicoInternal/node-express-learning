@@ -14,14 +14,14 @@ export class ChatsService {
 
   constructor() {}
 
-  async getChatById(id: string) {
-    return this.chatModel.getChatById(id)
+  async getChatById(id: string, userId: string) {
+    return this.chatModel.getChatByIdAndUserId(id, userId)
   }
 
-  async getChats(query: ChatsRequestType) {
+  async getChats(query: ChatsRequestType, userId: string) {
     const where = {
       title: query.title,
-      creatorId: query.creatorId,
+      userId,
     }
 
     const pagination = {
@@ -34,7 +34,7 @@ export class ChatsService {
       direction: query.direction || 'ASC',
     }
 
-    return this.chatModel.getChats({ where, pagination, order })
+    return this.chatModel.getChats({ where, pagination, order, userId })
   }
 
   async createChat(data: CreateChatRequestType & { creatorId: string }) {
@@ -49,14 +49,24 @@ export class ChatsService {
     return await this.chatModel.createChat({ title, creatorId })
   }
 
-  async deleteChat(id: string) {
+  async deleteChat(id: string, creatorId: string) {
+    const chat = await this.chatModel.getChatById(id)
+
+    if (!chat) {
+      throw new NotFoundError('There is chat by provided id')
+    }
+
+    if (chat.creatorId !== creatorId) {
+      throw new ForbiddenError('Only chat creator can delete chat')
+    }
+
     await this.chatModel.deleteChat(id)
   }
 
   async updateChat(id: string, creatorId: string, data: UpdateChatRequestType) {
     const { title } = data
 
-    const chat = await this.getChatById(id)
+    const chat = await this.chatModel.getChatById(id)
 
     logger.info(
       `ChatService.updateChat => getChatById result: ${JSON.stringify(
@@ -75,5 +85,24 @@ export class ChatsService {
     }
 
     return await this.chatModel.updateChat({ id, title })
+  }
+
+  async addUserToChat(chatId: string, userId: string, issuerUserId: string) {
+    const chat = await this.chatModel.getChatById(chatId)
+    const user = await this.userModel.findOneById(userId)
+
+    if (!chat) {
+      throw new NotFoundError('There is chat by provided id')
+    }
+
+    if (!user) {
+      throw new NotFoundError('There is no user by provided id')
+    }
+
+    if (chat.creatorId !== issuerUserId) {
+      throw new ForbiddenError('Only chat creator can add new users to chat')
+    }
+
+    await this.chatModel.addUserToChat(chatId, userId)
   }
 }

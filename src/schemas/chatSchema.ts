@@ -2,12 +2,9 @@ import { z } from 'zod'
 
 export const getChatsQuerySchema = z.object({
   title: z.string().optional(),
-  creatorId: z.string().optional(),
   page: z.string().optional(),
   size: z.string().optional(),
-  field: z
-    .union([z.literal('title').optional(), z.literal('creatorId').optional()])
-    .optional(),
+  field: z.literal('title').optional(),
   direction: z
     .union([z.literal('ASC').optional(), z.literal('DESC').optional()])
     .optional(),
@@ -31,6 +28,11 @@ export const updateChatBodySchema = z.object({
 
 export const updateChatParamsSchema = z.object({
   id: z.string(),
+})
+
+export const addUserToChatParamsSchema = z.object({
+  chatId: z.string(),
+  userId: z.string(),
 })
 
 export type ChatsRequestType = z.infer<typeof getChatsQuerySchema>

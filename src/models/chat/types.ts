@@ -5,14 +5,15 @@ export type GetChatsArguments = {
   }
 
   order: {
-    field: 'title' | 'creatorId'
+    field: 'title'
     direction: 'ASC' | 'DESC'
   }
 
-  where?: {
+  where: {
     title?: string
-    creatorId?: string
   }
+
+  userId: string
 }
 
 export type CreateChatArguments = {
