@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express'
-import { bodyValidationMiddleware } from '@/middlewares/bodyValidationMiddleware'
+import { requestValidation } from '@/middlewares/requestValidation'
 import {
   SingUpRequestType,
   LoginRequestType,
@@ -16,7 +16,7 @@ const authService = new AuthService()
 
 router.post(
   '/login',
-  bodyValidationMiddleware(userLoginSchema),
+  requestValidation(userLoginSchema, 'body'),
   asyncHandler(
     async (req: Request<unknown, unknown, LoginRequestType>, res: Response) => {
       const { accessToken, refreshToken } = await authService.login(req.body)
@@ -30,7 +30,7 @@ router.post(
 
 router.post(
   '/signup',
-  bodyValidationMiddleware(userSingUpSchema),
+  requestValidation(userSingUpSchema, 'body'),
   asyncHandler(
     async (
       req: Request<unknown, unknown, SingUpRequestType>,

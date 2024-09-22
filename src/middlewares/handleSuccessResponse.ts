@@ -7,8 +7,8 @@ export const handleSuccessResponse = (
 ) => {
   res.sendSuccessResponse = function (
     code: number,
-    message: string,
-    data?: Record<string, unknown>
+    message?: string,
+    data?: Record<string, unknown> | Record<string, unknown>[]
   ) {
     res.status(code).json({ message, success: true, data })
   }

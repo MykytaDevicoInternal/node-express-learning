@@ -10,14 +10,14 @@ export const authMiddleware = (
   _: Response,
   next: NextFunction
 ) => {
-  const token = req.cookies.token
+  const token = req.cookies.accessToken
 
   if (!token) {
     throw new UnauthorizedError('Authorization token not found')
   }
 
-  TokenService.verify(token)
-  // TODO: add token payload to req object
+  const decoded = TokenService.verify(token)
+  req.userId = decoded.userId
 
   next()
 }

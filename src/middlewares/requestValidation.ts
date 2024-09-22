@@ -2,10 +2,23 @@ import { Request, Response, NextFunction } from 'express'
 import { z, ZodError, ZodIssue } from 'zod'
 import { BadRequestError } from '@/utils/errors'
 
-export const bodyValidationMiddleware = (schema: z.ZodObject<any, any>) => {
+export const requestValidation = (
+  schema: z.ZodObject<any, any>,
+  type: 'body' | 'params' | 'query'
+) => {
   return (req: Request, _: Response, next: NextFunction) => {
     try {
-      schema.parse(req.body)
+      switch (type) {
+        case 'body':
+          schema.parse(req.body)
+          break
+        case 'params':
+          schema.parse(req.params)
+          break
+        case 'query':
+          schema.parse(req.query)
+          break
+      }
       next()
     } catch (error: unknown) {
       if (error instanceof ZodError) {
