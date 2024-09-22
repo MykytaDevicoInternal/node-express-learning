@@ -10,6 +10,20 @@ import { EntityStatuses } from '@/utils/constants'
 class ChatModel {
   constructor() {}
 
+  async getChatByMessageAndUserIds(messageId: string, userId: string) {
+    const query = `
+      SELECT 
+        uc.chat_id AS "id"
+      FROM users_chats uc
+      JOIN messages m ON uc.chat_id = m.chat_id
+      WHERE m.id = ? AND uc.user_id = ?
+    `
+
+    const [rows] = await db.execute<RowDataPacket[]>(query, [messageId, userId])
+
+    return rows[0]
+  }
+
   async getChatById(id: string) {
     const query = `
       SELECT
