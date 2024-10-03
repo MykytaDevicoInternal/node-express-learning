@@ -48,7 +48,7 @@ class MessageModel {
     return rows[0]
   }
 
-  async getMessages({ where, pagination, order, userId }: GetMessageArguments) {
+  async getMessages({ where, pagination, order }: GetMessageArguments) {
     let query = `
         SELECT 
           m.id,
@@ -58,32 +58,25 @@ class MessageModel {
           m.status,
           m.forwarded_chat_id AS "forwardedChatId",
           m.forwarded_from_user_id AS "forwardedFromUserId",
-          m.replied_message_id AS "repliedMessageId"
+          m.replied_message_id AS "repliedMessageId",
+          CONCAT(u.first_name, ' ', u.last_name) AS "userName"
         FROM messages m
+        JOIN users u ON u.id = m.creator_id
       `
 
     const queryParams: (string | number)[] = []
     const whereClauses: string[] = []
-    const joinClauses: string[] = []
 
     // Return only active messages
     whereClauses.push('status = 1')
 
-    if (where.chatId) {
-      whereClauses.push(`chat_id = ?`)
-      queryParams.push(where.chatId)
-    } else {
-      joinClauses.push('JOIN users_chats uc ON uc.user_id = ?')
-      queryParams.push(userId)
-    }
+    // Only search by provided chat id
+    whereClauses.push(`chat_id = ?`)
+    queryParams.push(where.chatId)
 
     if (where.text) {
       whereClauses.push(`text LIKE ?`)
       queryParams.push(`%${where.text}%`)
-    }
-
-    if (joinClauses.length) {
-      query += `${joinClauses.join(' ')} `
     }
 
     if (whereClauses.length) {

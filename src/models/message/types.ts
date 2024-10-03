@@ -11,10 +11,8 @@ export type GetMessageArguments = {
 
   where: {
     text?: string
-    chatId?: string
+    chatId: string
   }
-
-  userId: string
 }
 
 export type CreateMessageArguments = {

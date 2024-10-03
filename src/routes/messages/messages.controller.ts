@@ -2,35 +2,39 @@ import { asyncHandler } from '@/middlewares/asyncHandler'
 import { Router, Request, Response } from 'express'
 import { MessagesServices } from './messages.service'
 import { HTTPStatusCodes } from '@/utils/constants'
-import { NotFoundError, UnauthorizedError } from '@/utils/errors'
+import { UnauthorizedError } from '@/utils/errors'
 import { requestValidation } from '@/middlewares/requestValidation'
 import { logger } from '@/utils/logger'
 import {
   CreateMessageRequestType,
-  createMessageSchema,
+  createMessageBodySchema,
   deleteMessageSchema,
-  getMessageSchema,
-  getMessagesSchema,
+  getMessagesBodySchema,
   MessagesRequestType,
   updateMessageBodySchema,
   updateMessageParamsSchema,
   UpdateMessageRequestType,
+  createMessageParamsSchema,
+  getMessagesParamsSchema,
 } from '@/schemas/messageSchema'
 
-const router = Router()
+const router = Router({ mergeParams: true })
 
 const messageService = new MessagesServices()
 
 router.get(
   '/',
-  requestValidation(getMessagesSchema, 'query'),
+  requestValidation(getMessagesBodySchema, 'query'),
+  requestValidation(getMessagesParamsSchema, 'params'),
   asyncHandler(async (req: Request, res: Response) => {
+    const chatId = req.params.chatId
     const userId = req.userId
 
+    logger.info(`GET /messages => chatId: ${chatId}`)
+    logger.info(`GET /messages => userId: ${userId}`)
     logger.info(
       `GET /messages => query params: ${JSON.stringify(req.query, null, 2)}`
     )
-    logger.info(`GET /messages => userId: ${userId}`)
 
     if (!userId) {
       throw new UnauthorizedError('Cannot identify authorized user')
@@ -38,7 +42,8 @@ router.get(
 
     const messages = await messageService.getMessages(
       req.query as unknown as MessagesRequestType,
-      userId
+      userId,
+      chatId
     )
 
     logger.info(
@@ -49,48 +54,23 @@ router.get(
   })
 )
 
-router.get(
-  '/:id',
-  requestValidation(getMessageSchema, 'params'),
-  asyncHandler(async (req: Request, res: Response) => {
-    const id = req.params.id
-    const userId = req.userId
-
-    logger.info(`GET /messages/:id => params id: ${id}`)
-    logger.info(`GET /messages/:id => userId: ${userId}`)
-
-    if (!userId) {
-      throw new UnauthorizedError('Cannot identify authorized user')
-    }
-
-    const message = await messageService.getMessageById(id, userId)
-
-    logger.info(
-      `GET /messages/:id => chat: ${JSON.stringify(message, null, 2)}`
-    )
-
-    if (!message) {
-      throw new NotFoundError('Message not found')
-    }
-
-    res.sendSuccessResponse(HTTPStatusCodes.Ok, undefined, { ...message })
-  })
-)
-
 router.post(
   '/',
-  requestValidation(createMessageSchema, 'body'),
+  requestValidation(createMessageBodySchema, 'body'),
+  requestValidation(createMessageParamsSchema, 'params'),
   asyncHandler(
     async (
-      req: Request<unknown, unknown, CreateMessageRequestType>,
+      req: Request<any, unknown, CreateMessageRequestType>,
       res: Response
     ) => {
       const userId = req.userId
+      const chatId = req.params.chatId
 
+      logger.info(`POST /messages => userId: ${userId}`)
+      logger.info(`POST /messages => chatId: ${chatId}`)
       logger.info(
         `POST /messages => body: ${JSON.stringify(req.body, null, 2)}`
       )
-      logger.info(`POST /messages => userId: ${userId}`)
 
       if (!userId) {
         throw new UnauthorizedError('Cannot identify authorized user')
@@ -98,7 +78,8 @@ router.post(
 
       const createdMessage = await messageService.createMessage(
         req.body,
-        userId
+        userId,
+        chatId
       )
 
       logger.info(
@@ -126,13 +107,15 @@ router.patch(
       res: Response
     ) => {
       const id = req.params.id
+      const chatId = req.params.chatId
       const userId = req.userId
 
       logger.info(`PATCH /message/:id => id: ${id}`)
+      logger.info(`PATCH /message/:id => id: ${chatId}`)
+      logger.info(`PATCH /message/:id => userId: ${userId}`)
       logger.info(
         `PATCH /message/:id => body: ${JSON.stringify(req.body, null, 2)}`
       )
-      logger.info(`PATCH /message/:id => userId: ${userId}`)
 
       if (!userId) {
         throw new UnauthorizedError('Cannot identify authorized user')
@@ -141,6 +124,7 @@ router.patch(
       const updatedMessage = await messageService.updateMessage(
         id,
         userId,
+        chatId,
         req.body
       )
 
@@ -164,16 +148,18 @@ router.delete(
   requestValidation(deleteMessageSchema, 'params'),
   asyncHandler(async (req: Request, res: Response) => {
     const id = req.params.id
+    const chatId = req.params.chatId
     const userId = req.userId
 
     logger.info(`DELETE /messages/:id => params id: ${id}`)
+    logger.info(`DELETE /messages/:id => params chatId: ${chatId}`)
     logger.info(`DELETE /messages/:id => userId: ${userId}`)
 
     if (!userId) {
       throw new UnauthorizedError('Cannot identify authorized user')
     }
 
-    await messageService.deleteMessage(id, userId)
+    await messageService.deleteMessage(id, userId, chatId)
 
     res.sendSuccessResponse(HTTPStatusCodes.NoContent, undefined, {
       id,

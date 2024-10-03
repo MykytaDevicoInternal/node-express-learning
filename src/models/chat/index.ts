@@ -41,6 +41,7 @@ class ChatModel {
     return rows[0]
   }
 
+  // Check if user is member of provided chat
   async getChatByIdAndUserId(id: string, userId: string) {
     const query = `
       SELECT 

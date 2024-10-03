@@ -1,14 +1,17 @@
 import { z } from 'zod'
 
-export const createMessageSchema = z.object({
+export const createMessageBodySchema = z.object({
   text: z.string(),
-  chatId: z.string(),
   forwardedChatId: z.string().optional(),
   forwardedFromUserId: z.string().optional(),
   repliedMessageId: z.string().optional(),
 })
 
-export const getMessagesSchema = z.object({
+export const createMessageParamsSchema = z.object({
+  chatId: z.string(),
+})
+
+export const getMessagesBodySchema = z.object({
   text: z.string().optional(),
   chatId: z.string().optional(),
   page: z.string().optional(),
@@ -19,12 +22,13 @@ export const getMessagesSchema = z.object({
     .optional(),
 })
 
-export const getMessageSchema = z.object({
-  id: z.string(),
+export const getMessagesParamsSchema = z.object({
+  chatId: z.string(),
 })
 
 export const deleteMessageSchema = z.object({
   id: z.string(),
+  chatId: z.string(),
 })
 
 export const updateMessageBodySchema = z.object({
@@ -33,10 +37,10 @@ export const updateMessageBodySchema = z.object({
 
 export const updateMessageParamsSchema = z.object({
   id: z.string(),
+  chatId: z.string(),
 })
 
-export type MessagesRequestType = z.infer<typeof getMessagesSchema>
-export type MessageRequestType = z.infer<typeof getMessageSchema>
-export type CreateMessageRequestType = z.infer<typeof createMessageSchema>
+export type MessagesRequestType = z.infer<typeof getMessagesBodySchema>
+export type CreateMessageRequestType = z.infer<typeof createMessageBodySchema>
 export type DeleteMessageRequestType = z.infer<typeof deleteMessageSchema>
 export type UpdateMessageRequestType = z.infer<typeof updateMessageBodySchema>
