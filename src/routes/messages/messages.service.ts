@@ -25,7 +25,7 @@ export class MessagesServices {
       `MessagesServices.getMessages > chat: ${JSON.stringify(chat, null, 2)}`
     )
 
-    if (isObjectEmpty(chat)) {
+    if (!chat || isObjectEmpty(chat)) {
       throw new ForbiddenError(
         'You cannot post message in chat which you are not member of'
       )
@@ -73,7 +73,6 @@ export class MessagesServices {
         forwardedChatId,
         userId
       )
-      console.log("🚀 ~ MessagesServices ~ forwardedChat:", forwardedChat)
 
       if (!forwardedChat || isObjectEmpty(forwardedChat)) {
         throw new ForbiddenError(
@@ -87,7 +86,10 @@ export class MessagesServices {
           forwardedFromUserId
         )
 
-      if (!forwardedChatOfForwardUser || isObjectEmpty(forwardedChatOfForwardUser)) {
+      if (
+        !forwardedChatOfForwardUser ||
+        isObjectEmpty(forwardedChatOfForwardUser)
+      ) {
         throw new ForbiddenError(
           'Forwarded from user is not a member of the forwarded chat'
         )
@@ -98,7 +100,6 @@ export class MessagesServices {
       const repliedMessage = await this.messageModel.getMessageById(
         repliedMessageId
       )
-      console.log("🚀 ~ MessagesServices ~ repliedMessage:", repliedMessage)
 
       if (!repliedMessage || isObjectEmpty(repliedMessage)) {
         throw new NotFoundError('Cannot find replied message by provided id')
