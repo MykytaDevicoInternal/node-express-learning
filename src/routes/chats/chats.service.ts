@@ -5,8 +5,9 @@ import {
 } from '@/schemas/chatSchema'
 import ChatModel from '../../models/chat'
 import UserModel from '../../models/user'
-import { ForbiddenError, NotFoundError } from '@/utils/errors'
+import { BadRequestError, ForbiddenError, NotFoundError } from '@/utils/errors'
 import { logger } from '@/utils/logger'
+import { isObjectEmpty } from '@/utils/helpers'
 
 export class ChatsService {
   chatModel = ChatModel
@@ -90,6 +91,7 @@ export class ChatsService {
   async addUserToChat(chatId: string, userId: string, issuerUserId: string) {
     const chat = await this.chatModel.getChatById(chatId)
     const user = await this.userModel.findOneById(userId)
+    const userChat = await this.chatModel.getChatByIdAndUserId(chatId, userId)
 
     if (!chat) {
       throw new NotFoundError('There is chat by provided id')
@@ -97,6 +99,10 @@ export class ChatsService {
 
     if (!user) {
       throw new NotFoundError('There is no user by provided id')
+    }
+
+    if (userChat) {
+      throw new BadRequestError('User already exists in current chat')
     }
 
     if (chat.creatorId !== issuerUserId) {
