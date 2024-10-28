@@ -1,32 +1,20 @@
-import { asyncHandler } from '@/middlewares/asyncHandler'
 import { Router, Request, Response } from 'express'
 import { MessagesServices } from './messages.service'
 import { HTTPStatusCodes } from '@/utils/constants'
 import { UnauthorizedError } from '@/utils/errors'
-import { requestValidation } from '@/middlewares/requestValidation'
 import { logger } from '@/utils/logger'
 import {
   CreateMessageRequestType,
-  createMessageBodySchema,
-  deleteMessageSchema,
-  getMessagesBodySchema,
   MessagesRequestType,
-  updateMessageBodySchema,
-  updateMessageParamsSchema,
   UpdateMessageRequestType,
-  createMessageParamsSchema,
-  getMessagesParamsSchema,
 } from '@/schemas/messageSchema'
 
 const router = Router({ mergeParams: true })
 
-const messageService = new MessagesServices()
+export class MessageController {
+  constructor(private messageService: MessagesServices) {}
 
-router.get(
-  '/',
-  requestValidation(getMessagesBodySchema, 'query'),
-  requestValidation(getMessagesParamsSchema, 'params'),
-  asyncHandler(async (req: Request, res: Response) => {
+  async getMessages(req: Request, res: Response) {
     const chatId = req.params.chatId
     const userId = req.userId
 
@@ -40,7 +28,7 @@ router.get(
       throw new UnauthorizedError('Cannot identify authorized user')
     }
 
-    const messages = await messageService.getMessages(
+    const messages = await this.messageService.getMessages(
       req.query as unknown as MessagesRequestType,
       userId,
       chatId
@@ -51,102 +39,82 @@ router.get(
     )
 
     res.sendSuccessResponse(HTTPStatusCodes.Ok, undefined, messages)
-  })
-)
+  }
 
-router.post(
-  '/',
-  requestValidation(createMessageBodySchema, 'body'),
-  requestValidation(createMessageParamsSchema, 'params'),
-  asyncHandler(
-    async (
-      req: Request<any, unknown, CreateMessageRequestType>,
-      res: Response
-    ) => {
-      const userId = req.userId
-      const chatId = req.params.chatId
+  async createMessage(
+    req: Request<any, unknown, CreateMessageRequestType>,
+    res: Response
+  ) {
+    const userId = req.userId
+    const chatId = req.params.chatId
 
-      logger.info(`POST /messages => userId: ${userId}`)
-      logger.info(`POST /messages => chatId: ${chatId}`)
-      logger.info(
-        `POST /messages => body: ${JSON.stringify(req.body, null, 2)}`
-      )
+    logger.info(`POST /messages => userId: ${userId}`)
+    logger.info(`POST /messages => chatId: ${chatId}`)
+    logger.info(`POST /messages => body: ${JSON.stringify(req.body, null, 2)}`)
 
-      if (!userId) {
-        throw new UnauthorizedError('Cannot identify authorized user')
-      }
-
-      const createdMessage = await messageService.createMessage(
-        req.body,
-        userId,
-        chatId
-      )
-
-      logger.info(
-        `POST /messages => createdMessage: ${JSON.stringify(
-          createdMessage,
-          null,
-          2
-        )}`
-      )
-
-      res.sendSuccessResponse(HTTPStatusCodes.Created, undefined, {
-        ...createdMessage,
-      })
+    if (!userId) {
+      throw new UnauthorizedError('Cannot identify authorized user')
     }
-  )
-)
 
-router.patch(
-  '/:id',
-  requestValidation(updateMessageBodySchema, 'body'),
-  requestValidation(updateMessageParamsSchema, 'params'),
-  asyncHandler(
-    async (
-      req: Request<any, unknown, UpdateMessageRequestType>,
-      res: Response
-    ) => {
-      const id = req.params.id
-      const chatId = req.params.chatId
-      const userId = req.userId
+    const createdMessage = await this.messageService.createMessage(
+      req.body,
+      userId,
+      chatId
+    )
 
-      logger.info(`PATCH /message/:id => id: ${id}`)
-      logger.info(`PATCH /message/:id => id: ${chatId}`)
-      logger.info(`PATCH /message/:id => userId: ${userId}`)
-      logger.info(
-        `PATCH /message/:id => body: ${JSON.stringify(req.body, null, 2)}`
-      )
+    logger.info(
+      `POST /messages => createdMessage: ${JSON.stringify(
+        createdMessage,
+        null,
+        2
+      )}`
+    )
 
-      if (!userId) {
-        throw new UnauthorizedError('Cannot identify authorized user')
-      }
+    res.sendSuccessResponse(HTTPStatusCodes.Created, undefined, {
+      ...createdMessage,
+    })
+  }
 
-      const updatedMessage = await messageService.updateMessage(
-        id,
-        userId,
-        chatId,
-        req.body
-      )
+  async updateMessage(
+    req: Request<any, unknown, UpdateMessageRequestType>,
+    res: Response
+  ) {
+    const id = req.params.id
+    const chatId = req.params.chatId
+    const userId = req.userId
 
-      logger.info(
-        `PATCH /message/:id => updatedChat: ${JSON.stringify(
-          updatedMessage,
-          null,
-          2
-        )}`
-      )
+    logger.info(`PATCH /message/:id => id: ${id}`)
+    logger.info(`PATCH /message/:id => id: ${chatId}`)
+    logger.info(`PATCH /message/:id => userId: ${userId}`)
+    logger.info(
+      `PATCH /message/:id => body: ${JSON.stringify(req.body, null, 2)}`
+    )
 
-      res.sendSuccessResponse(HTTPStatusCodes.Ok, undefined, {
-        ...updatedMessage,
-      })
+    if (!userId) {
+      throw new UnauthorizedError('Cannot identify authorized user')
     }
-  )
-)
 
-router.delete(
-  '/:id',
-  requestValidation(deleteMessageSchema, 'params'),
-  asyncHandler(async (req: Request, res: Response) => {
+    const updatedMessage = await this.messageService.updateMessage(
+      id,
+      userId,
+      chatId,
+      req.body
+    )
+
+    logger.info(
+      `PATCH /message/:id => updatedChat: ${JSON.stringify(
+        updatedMessage,
+        null,
+        2
+      )}`
+    )
+
+    res.sendSuccessResponse(HTTPStatusCodes.Ok, undefined, {
+      ...updatedMessage,
+    })
+  }
+
+  async deleteMessage(req: Request, res: Response) {
     const id = req.params.id
     const chatId = req.params.chatId
     const userId = req.userId
@@ -159,12 +127,10 @@ router.delete(
       throw new UnauthorizedError('Cannot identify authorized user')
     }
 
-    await messageService.deleteMessage(id, userId, chatId)
+    await this.messageService.deleteMessage(id, userId, chatId)
 
-    res.sendSuccessResponse(HTTPStatusCodes.NoContent, undefined, {
+    res.sendSuccessResponse(HTTPStatusCodes.Ok, undefined, {
       id,
     })
-  })
-)
-
-export default router
+  }
+}

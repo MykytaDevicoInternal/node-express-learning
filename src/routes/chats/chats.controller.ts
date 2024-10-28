@@ -1,31 +1,18 @@
-import { asyncHandler } from '@/middlewares/asyncHandler'
-import { Router, Request, Response } from 'express'
+import { Request, Response } from 'express'
 import { ChatsService } from './chats.service'
 import { HTTPStatusCodes } from '@/utils/constants'
 import { NotFoundError, UnauthorizedError } from '@/utils/errors'
-import { requestValidation } from '@/middlewares/requestValidation'
 import {
   ChatsRequestType,
   CreateChatRequestType,
-  createChatSchema,
-  deleteChatParamsSchema,
-  getChatParamsSchema,
-  getChatsQuerySchema,
-  updateChatParamsSchema,
   UpdateChatRequestType,
-  updateChatBodySchema,
-  addUserToChatParamsSchema,
 } from '@/schemas/chatSchema'
 import { logger } from '@/utils/logger'
 
-const router = Router()
+export class ChatsController {
+  constructor(private chatsService: ChatsService) {}
 
-const chatsService = new ChatsService()
-
-router.get(
-  '/',
-  requestValidation(getChatsQuerySchema, 'query'),
-  asyncHandler(async (req: Request, res: Response) => {
+  async getChats(req: Request, res: Response) {
     logger.info(
       `GET /chats => query params: ${JSON.stringify(req.query, null, 2)}`
     )
@@ -38,7 +25,7 @@ router.get(
       throw new UnauthorizedError('Cannot identify authorized user')
     }
 
-    const chats = await chatsService.getChats(
+    const chats = await this.chatsService.getChats(
       req.query as unknown as ChatsRequestType,
       userId
     )
@@ -46,13 +33,9 @@ router.get(
     logger.info(`GET /chats => chats: ${JSON.stringify(chats, null, 2)}`)
 
     res.sendSuccessResponse(HTTPStatusCodes.Ok, undefined, chats)
-  })
-)
+  }
 
-router.get(
-  '/:id',
-  requestValidation(getChatParamsSchema, 'params'),
-  asyncHandler(async (req: Request, res: Response) => {
+  async getChat(req: Request, res: Response) {
     const id = req.params.id
     const userId = req.userId
 
@@ -63,7 +46,7 @@ router.get(
       throw new UnauthorizedError('Cannot identify authorized user')
     }
 
-    const chat = await chatsService.getChatById(id, userId)
+    const chat = await this.chatsService.getChatById(id, userId)
 
     logger.info(`GET /chats/:id => chat: ${JSON.stringify(chat, null, 2)}`)
 
@@ -72,78 +55,61 @@ router.get(
     }
 
     res.sendSuccessResponse(HTTPStatusCodes.Ok, undefined, { ...chat })
-  })
-)
+  }
 
-router.post(
-  '/',
-  requestValidation(createChatSchema, 'body'),
-  asyncHandler(
-    async (
-      req: Request<unknown, unknown, CreateChatRequestType>,
-      res: Response
-    ) => {
-      const userId = req.userId
+  async createChat(
+    req: Request<unknown, unknown, CreateChatRequestType>,
+    res: Response
+  ) {
+    const userId = req.userId
 
-      logger.info(`POST /chats => userId: ${userId}`)
+    logger.info(`POST /chats => userId: ${userId}`)
 
-      if (!userId) {
-        throw new UnauthorizedError('Cannot identify authorized user')
-      }
-
-      const createdChat = await chatsService.createChat({
-        ...req.body,
-        creatorId: userId,
-      })
-
-      logger.info(
-        `POST /chats => createdChat: ${JSON.stringify(createdChat, null, 2)}`
-      )
-
-      res.sendSuccessResponse(HTTPStatusCodes.Created, undefined, {
-        ...createdChat,
-      })
+    if (!userId) {
+      throw new UnauthorizedError('Cannot identify authorized user')
     }
-  )
-)
 
-router.patch(
-  '/:id',
-  requestValidation(updateChatBodySchema, 'body'),
-  requestValidation(updateChatParamsSchema, 'params'),
-  asyncHandler(
-    async (
-      req: Request<any, unknown, UpdateChatRequestType>,
-      res: Response
-    ) => {
-      const id = req.params.id
-      const userId = req.userId
+    const createdChat = await this.chatsService.createChat({
+      ...req.body,
+      creatorId: userId,
+    })
 
-      logger.info(`PATCH /chats => id: ${id}`)
-      logger.info(`PATCH /chats => body: ${JSON.stringify(req.body, null, 2)}`)
-      logger.info(`PATCH /chats => userId: ${userId}`)
+    logger.info(
+      `POST /chats => createdChat: ${JSON.stringify(createdChat, null, 2)}`
+    )
 
-      if (!userId) {
-        throw new UnauthorizedError('Cannot identify authorized user')
-      }
+    res.sendSuccessResponse(HTTPStatusCodes.Created, undefined, {
+      ...createdChat,
+    })
+  }
 
-      const updatedChat = await chatsService.updateChat(id, userId, req.body)
+  async updateChat(
+    req: Request<any, unknown, UpdateChatRequestType>,
+    res: Response
+  ) {
+    const id = req.params.id
+    const userId = req.userId
 
-      logger.info(
-        `PATCH /chats => updatedChat: ${JSON.stringify(updatedChat, null, 2)}`
-      )
+    logger.info(`PATCH /chats => id: ${id}`)
+    logger.info(`PATCH /chats => body: ${JSON.stringify(req.body, null, 2)}`)
+    logger.info(`PATCH /chats => userId: ${userId}`)
 
-      res.sendSuccessResponse(HTTPStatusCodes.Ok, undefined, {
-        ...updatedChat,
-      })
+    if (!userId) {
+      throw new UnauthorizedError('Cannot identify authorized user')
     }
-  )
-)
 
-router.delete(
-  '/:id',
-  requestValidation(deleteChatParamsSchema, 'params'),
-  asyncHandler(async (req: Request, res: Response) => {
+    const updatedChat = await this.chatsService.updateChat(id, userId, req.body)
+
+    logger.info(
+      `PATCH /chats => updatedChat: ${JSON.stringify(updatedChat, null, 2)}`
+    )
+
+    res.sendSuccessResponse(HTTPStatusCodes.Ok, undefined, {
+      ...updatedChat,
+    })
+  }
+
+  async deleteChat(req: Request, res: Response) {
     const id = req.params.id
     const userId = req.userId
 
@@ -153,18 +119,14 @@ router.delete(
       throw new UnauthorizedError('Cannot identify authorized user')
     }
 
-    await chatsService.deleteChat(id, userId)
+    await this.chatsService.deleteChat(id, userId)
 
     res.sendSuccessResponse(HTTPStatusCodes.Ok, undefined, {
       id,
     })
-  })
-)
+  }
 
-router.post(
-  '/:chatId/users/:userId',
-  requestValidation(addUserToChatParamsSchema, 'params'),
-  asyncHandler(async (req: Request, res: Response) => {
+  async inviteUserToChat(req: Request, res: Response) {
     const chatId = req.params.chatId
     const userId = req.params.userId
     const issuerUserId = req.userId
@@ -177,14 +139,12 @@ router.post(
       throw new UnauthorizedError('Cannot identify authorized user')
     }
 
-    await chatsService.addUserToChat(chatId, userId, issuerUserId)
+    await this.chatsService.addUserToChat(chatId, userId, issuerUserId)
 
     res.sendSuccessResponse(
       HTTPStatusCodes.Ok,
       'User successfully added to chat',
       { chatId }
     )
-  })
-)
-
-export default router
+  }
+}

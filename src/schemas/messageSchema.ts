@@ -13,7 +13,6 @@ export const createMessageParamsSchema = z.object({
 
 export const getMessagesBodySchema = z.object({
   text: z.string().optional(),
-  chatId: z.string().optional(),
   page: z.string().optional(),
   size: z.string().optional(),
   field: z.literal('createdAt').optional(),
