@@ -1,9 +1,12 @@
 {
   "scripts": {
-    "dev": "tsx watch --clear-screen=false src/app.ts",
+    "start:dev": "tsx watch --clear-screen=false src/app.ts",
+    "start:prod": "node ./src/app.js",
     "migrate:up": "tsx ./scripts/deployMigrations.ts",
+    "migrate:prod:up": "tsx ./scripts/deployMigrations.js",
     "migrate:make": "tsx ./scripts/generateMigration.ts",
-    "test": "mocha"
+    "test": "mocha",
+    "build": "swc src scripts --out-dir dist"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
@@ -20,6 +23,8 @@
   "devDependencies": {
     "@eslint/js": "^9.9.0",
     "@faker-js/faker": "^9.0.3",
+    "@swc/cli": "^0.5.2",
+    "@swc/core": "^1.10.0",
     "@types/bcrypt": "^5.0.2",
     "@types/chai": "^5.0.0",
     "@types/chai-as-promised": "^8.0.1",
@@ -34,6 +39,7 @@
     "eslint": "^9.9.0",
     "globals": "^15.9.0",
     "mocha": "^10.7.3",
+    "pkgroll": "^2.5.1",
     "sinon": "^19.0.2",
     "ts-node": "^10.9.2",
     "tsx": "^4.17.0",

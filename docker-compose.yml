@@ -1,0 +1,36 @@
+version: "3.7"
+
+services:
+  chat-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - '4200:4200'
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+        restart: true
+    command: sh -c "yarn migrate:prod:up && yarn start:prod"
+
+  db:
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_USER: chatuser
+      MYSQL_ROOT_PASSWORD: Fishki123!
+      MYSQL_DATABASE: chatapp
+    ports:
+      - '3306:3306'
+    volumes:
+      - './docker/mysql/data:/var/lib/mysql'
+      - './docker/mysql/init:/docker-entrypoint-initdb.d' 
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
