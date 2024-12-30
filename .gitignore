@@ -18,3 +18,9 @@ benchmarks/graphs
 yarn.lock
 # ignore additional files using core.excludesFile
 # https://git-scm.com/docs/gitignore
+
+# Build files
+dist
+
+# Docker metadata
+docker/mysql/data
